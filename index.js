@@ -126,43 +126,182 @@ function getRecomendation(inputData) {
   nightModeGadgets.sort((a, b) => a.power - b.power);
   dayNightModeGadgets.sort((a, b) => a.power - b.power);
 
-  let firstCheapSortedRates = inputData.rates.sort((a, b) => a.value - b.value);
+  let sortedByValuePeriods = inputData.rates.sort((a, b) => a.value - b.value);
 
+  let daySortedPeriods = [];
+  let nightSortedPeriods = [];
+
+  sortedByValuePeriods.forEach((period) => {
+    let day = {from: null, to: null};
+    let night = {from: null, to: null};
+    let convertedTo = period.to < period.from ? period.to + 24 : period.to;
+    for (let i = period.from; i < convertedTo; i++) {
+      let convertedI = i > 23 ? i - 24 : i;
+
+      if (convertedI >= 7 && convertedI < 21 ) {
+        if (day.from === null && night.from === null) day.from = convertedI;
+        if (day.from === null && night.from !== null) {
+          night.to = convertedI;
+          night.value = period.value;
+          nightSortedPeriods.push(night);
+          night = {from: null, to: null};
+          if (i + 1 !== convertedTo) day.from = convertedI;
+        }
+      } else {
+        if (day.from === null && night.from === null) night.from = convertedI;
+        if (day.from !== null && night.from === null) {
+          day.to = convertedI;
+          day.value = period.value;
+          daySortedPeriods.push(day);
+          day = {from: null, to: null};
+          if (i + 1 !== convertedTo) night.from = convertedI;
+        }
+      }
+    }
+    if (day.from !== null) {
+      day.to = period.to;
+      day.value = period.value;
+      daySortedPeriods.push(day)
+    } 
+    if (night.from !== null) {
+      night.to = period.to;
+      night.value = period.value;
+      nightSortedPeriods.push(night)
+    } 
+  });
+  
   dayModeGadgets.forEach((device) => {
-    let candidates = [];
-    firstCheapSortedRates.some((time) => {
+    let timeCandidates = [];
+    daySortedPeriods.some((time) => {
       let result = isFitThisPeriod(time.from, time.to, device.power, device.duration, schedule)
       console.log('result', result)
       if (result.start !== null && result.end !== null) {
         console.log('влезли!');
-        candidates.push({start: result.start, end: result.end});
+        timeCandidates.push({start: result.start, end: result.end});
         return true
       }
       if (result.end === null && result.firstBreak !== time.from) {
         console.log('есть варик слева')
         let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule)
         if (leftResult.start && leftResult.end) {
-          candidates.push({start: leftResult.start, end: leftResult.end});
+          timeCandidates.push({start: leftResult.start, end: leftResult.end});
         }
       }
       if (result.start !== null && result.end === null) {
         console.log('есть варик справа')
         let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule)
         if (rightResult.start && rightResult.end) {
-          candidates.push({start: rightResult.start, end: rightResult.end});
+          timeCandidates.push({start: rightResult.start, end: rightResult.end});
         }
       }
       if (result.start === null && result.firstBreak === time.from) {
         console.log('вообще вариков нет!')
       }
-    })
-    console.log('candidates', candidates)
+    });
+    
+    //отфильтровываем периоды, которые не подходят для mode === 'day'
+    timeCandidates = timeCandidates.filter((time) => time.start >= 7 && time.start < 21 && time.end > 7 && time.end <= 21);
+
+    if (timeCandidates.length === 0) throw new Error(`device with id ${device.id} cant be included in schedule`);
+
+    timeCandidates.sort((a, b) => a - b);
+    let startTime = timeCandidates[0].start;
+    let convertedEndTime = startTime > timeCandidates[0].end ? timeCandidates[0].end + 24 : timeCandidates[0].end;
+
+    //записываем прибор в лучший промежуток
+    for (startTime; startTime <= convertedEndTime; startTime++) {
+      schedule[startTime > 23 ? startTime - 24 : startTime].gadgets.push(device.id);
+      schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue = schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue - device.power
+    }
   });
+
+  nightModeGadgets.forEach((device) => {
+    let timeCandidates = [];
+    nightSortedPeriods.some((time) => {
+      if((time.from < time.to && time.from >= 7 && time.to < 21) || (time.from > time.to && (time.from < 21 || time.to > 7))) return;
+
+      let result = isFitThisPeriod(time.from, time.to, device.power, device.duration, schedule)
+      console.log('result', result)
+      if (result.start !== null && result.end !== null) {
+        console.log('влезли!');
+        timeCandidates.push({start: result.start, end: result.end});
+        return true
+      }
+      if (result.end === null && result.firstBreak !== time.from) {
+        console.log('есть варик слева')
+        let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule)
+        if (leftResult.start && leftResult.end) {
+          timeCandidates.push({start: leftResult.start, end: leftResult.end});
+        }
+      }
+      if (result.start !== null && result.end === null) {
+        console.log('есть варик справа')
+        let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule)
+        if (rightResult.start && rightResult.end) {
+          timeCandidates.push({start: rightResult.start, end: rightResult.end});
+        }
+      }
+      if (result.start === null && result.firstBreak === time.from) {
+        console.log('вообще вариков нет!')
+      }
+    });
+
+    //отфильтровываем периоды, которые не подходят для mode === 'night'
+    timeCandidates = timeCandidates.filter((time) => !(time.start >= 7 && time.start < 21 && time.end > 7 && time.end <= 21));
+
+    if (timeCandidates.length === 0) throw new Error(`device with id ${device.id} cant be included in schedule`);
+    timeCandidates.sort((a, b) => a - b);
+    let startTime = timeCandidates[0].start;
+    let convertedEndTime = startTime > timeCandidates[0].end ? timeCandidates[0].end + 24 : timeCandidates[0].end;
+    for (startTime; startTime <= convertedEndTime; startTime++) {
+      schedule[startTime > 23 ? startTime - 24 : startTime].gadgets.push(device.id);
+      schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue = schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue - device.power
+    }
+  });
+
+  dayNightModeGadgets.forEach((device) => {
+    let timeCandidates = [];
+    sortedByValuePeriods.some((time) => {
+      let result = isFitThisPeriod(time.from, time.to, device.power, device.duration, schedule)
+      if (result.start !== null && result.end !== null) {
+        console.log('влезли!');
+        timeCandidates.push({start: result.start, end: result.end});
+        return true
+      }
+      if (result.end === null && result.firstBreak !== time.from) {
+        console.log('есть варик слева')
+        let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule)
+        if (leftResult.start && leftResult.end) {
+          timeCandidates.push({start: leftResult.start, end: leftResult.end});
+        }
+      }
+      if (result.start !== null && result.end === null) {
+        console.log('есть варик справа')
+        let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule)
+        if (rightResult.start && rightResult.end) {
+          timeCandidates.push({start: rightResult.start, end: rightResult.end});
+        }
+      }
+      if (result.start === null && result.firstBreak === time.from) {
+        console.log('вообще вариков нет!')
+      }
+    });
+    if (timeCandidates.length === 0) throw new Error(`device with id ${device.id} cant be included in schedule`);
+    timeCandidates.sort((a, b) => a - b);
+    let startTime = timeCandidates[0].start;
+    let convertedEndTime = startTime > timeCandidates[0].end ? timeCandidates[0].end + 24 : timeCandidates[0].end;
+    for (startTime; startTime <= convertedEndTime; startTime++) {
+      schedule[startTime > 23 ? startTime - 24 : startTime].gadgets.push(device.id);
+      schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue = schedule[startTime > 23 ? startTime - 24 : startTime].remainingValue - device.power
+    }
+  });
+  
+  console.log('schedule', schedule)
 }
 
 function isFitThisPeriod(from, to, power, duration, schedule){
   let result = {start: null, end: null, firstBreak: null};
-  let convertedTo = from > to ? to + 24 : to
+  let convertedTo = from > to ? to + 24 : to;
 
   for (from; from <= convertedTo; from++) {
     let currentTimeStep = from;
@@ -171,15 +310,14 @@ function isFitThisPeriod(from, to, power, duration, schedule){
 
     //влезает по мощности в данный час
     if (schedule[currentTimeStep].remainingValue >= power) {
-      if (result.start) {
-        if (from - result.start + 1 === duration) {
-          result.end = currentTimeStep;
-          break
-        } else {
-          if (currentTimeStep === to) break
-        }
-      } else {
+      if (result.start === null) {
         result.start = currentTimeStep
+      }
+      if (from - result.start + 1 === duration) {
+        result.end = currentTimeStep;
+        break
+      } else {
+        if (currentTimeStep === to) break
       }
     //не влезает по мощности в данный час
     } else {
