@@ -1,6 +1,4 @@
-let data
-
-  export default data = {
+let inputData = {
   "devices": [
     {
       "id": "F972B82BA56A70CC579945773B6866FB",
@@ -64,3 +62,5 @@ let data
   ],
   "maxPower": 2100
 };
+
+module.exports = inputData;
