@@ -1,0 +1,11 @@
+{
+  "name": "entrance-task-3-2",
+  "version": "0.0.1",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^23.5.0"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}

@@ -1,5 +1,5 @@
 let getTimeCandidates = function (periods, device, schedule) {
-  let timeCandidates = []
+  let timeCandidates = [];
   periods.some((time) => {
     let result = isFitThisPeriod(time.from, time.to, device.power, device.duration, schedule);
     // полностью влезает в период
@@ -9,14 +9,14 @@ let getTimeCandidates = function (periods, device, schedule) {
     }
     // полностью не влезает, но есть кандидат слева по времени
     if (result.end === null && result.firstBreak !== time.from) {
-      let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule)
+      let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule);
       if (leftResult.start && leftResult.end) {
         timeCandidates.push({start: leftResult.start, end: leftResult.end});
       }
     }
     //полностью не влезает, но есть кандидат справа по времени
     if (result.start !== null && result.end === null) {
-      let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule)
+      let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule);
       if (rightResult.start && rightResult.end) {
         timeCandidates.push({start: rightResult.start, end: rightResult.end});
       }

@@ -1,5 +1,5 @@
 let Big = require('./big.js/big');
-let inputData = require('./input');
+let inputData = require('./inputs/input');
 let handleCandidates = require('./handle-candidates');
 let writeConsumedEnergy = require('./write-consumed-energy');
 let getTimeCandidates = require('./get-time-candidates');
@@ -106,7 +106,7 @@ function getRecomendation(inputData) {
     let timeCandidates = getTimeCandidates(daySortedPeriods, device, schedule);
     
     //отфильтровываем периоды, которые не подходят для mode === 'day'
-    timeCandidates = timeCandidates.filter((time) => time.start >= 7 && time.start < 21 && time.end > 7 && time.end <= 21);
+    timeCandidates = timeCandidates.filter((time) => time.start < time.end && time.start >= 7 && time.start < 21 && time.end > 7 && time.end < 21);
 
     handleCandidates(timeCandidates, device, schedule, deviceConsumedEnergy)
   });
@@ -116,7 +116,10 @@ function getRecomendation(inputData) {
     let timeCandidates = getTimeCandidates(nightSortedPeriods, device, schedule);
 
     //отфильтровываем периоды, которые не подходят для mode === 'night'
-    timeCandidates = timeCandidates.filter((time) => !(time.start >= 7 && time.start < 21 && time.end > 7 && time.end <= 21));
+    timeCandidates = timeCandidates.filter((time) => {
+      return (time.start < time.end && (time.start < 23 && time.end > 21) || (time.start < 7 && time.end > 0)) ||
+        (time.start > time.end && (time.start >= 21 && time.end < 7))
+    });
 
     handleCandidates(timeCandidates, device, schedule, deviceConsumedEnergy)
   });
@@ -142,3 +145,5 @@ function getRecomendation(inputData) {
 }
 
 console.log(getRecomendation(inputData));
+
+module.exports = getRecomendation;
