@@ -4,8 +4,8 @@ let handleCandidates = function (candidates, device, schedule, whereToWriteConsu
   if (candidates.length === 0) throw new Error(`device with id ${device.id} cant be included in schedule`);
 
   let candidatesWithPrice = candidates.map((timePeriod) => {
-    for (let i = timePeriod.start; i <= timePeriod.end; i++) {
-      timePeriod.totalValue = timePeriod.totalValue ? timePeriod.totalValue + schedule[i].value : schedule[i].value
+    for (let i = timePeriod.start; i <= (timePeriod.start > timePeriod.end ? timePeriod.end + 24 : timePeriod.end); i++) {
+      timePeriod.totalValue = timePeriod.totalValue ? timePeriod.totalValue + schedule[i%24].value : schedule[i%24].value
     }
     return timePeriod
   });

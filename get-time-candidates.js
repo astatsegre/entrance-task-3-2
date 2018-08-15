@@ -5,10 +5,10 @@ let getTimeCandidates = function (periods, device, schedule) {
     // полностью влезает в период
     if (result.start !== null && result.end !== null) {
       timeCandidates.push({start: result.start, end: result.end});
-      return true
+      return timeCandidates
     }
     // полностью не влезает, но есть кандидат слева по времени
-    if (result.end === null && result.firstBreak !== time.from) {
+    if (result.end === null && result.firstBreak !== null && result.firstBreak !== time.from) {
       let leftResult = isFitThisPeriod(result.firstBreak - device.duration, result.firstBreak, device.power, device.duration, schedule);
       if (leftResult.start && leftResult.end) {
         timeCandidates.push({start: leftResult.start, end: leftResult.end});
@@ -19,6 +19,10 @@ let getTimeCandidates = function (periods, device, schedule) {
       let rightResult = isFitThisPeriod(result.start, result.start + device.duration, device.power, device.duration, schedule);
       if (rightResult.start && rightResult.end) {
         timeCandidates.push({start: rightResult.start, end: rightResult.end});
+      }
+      let rightResultFromEndOfPeriod = isFitThisPeriod(time.to - 1, time.to -1 + device.duration, device.power, device.duration, schedule);
+      if (rightResultFromEndOfPeriod.start && rightResultFromEndOfPeriod.end) {
+        timeCandidates.push({start: rightResultFromEndOfPeriod.start, end: rightResultFromEndOfPeriod.end});
       }
     }
   });
