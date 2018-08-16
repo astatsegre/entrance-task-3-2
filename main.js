@@ -1,8 +1,7 @@
 let Big = require('./big.js/big');
-let inputData = require('./inputs/input');
-let handleCandidates = require('./handle-candidates');
-let writeConsumedEnergy = require('./write-consumed-energy');
-let getTimeCandidates = require('./get-time-candidates');
+let handleCandidates = require('./modules/handle-candidates');
+let writeConsumedEnergy = require('./modules/write-consumed-energy');
+let getTimeCandidates = require('./modules/get-time-candidates');
 
 
 function getRecomendation(inputData) {
@@ -143,7 +142,5 @@ function getRecomendation(inputData) {
    }
  return finalObject;
 }
-
-console.log(getRecomendation(inputData));
 
 module.exports = getRecomendation;

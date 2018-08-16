@@ -1,8 +1,9 @@
 const getRecomendation = require('./main');
-let inputData = require('./inputs/input');
-let inputData2 = require('./inputs/input-2');
+let inputData = require('./inputs/input-basic');
+let inputData2 = require('./inputs/input-badic-more-gadgets');
 let inputUnableToFit = require('./inputs/input-unable-to-fit');
 let inputUnableToFitByTime = require('./inputs/input-unable-to-fit-by-time');
+let inputHugeDuration = require('./inputs/input-huge-duration');
 
 
 test('basic test total value with data from task', () => {
@@ -24,6 +25,10 @@ test('test signature of consumedEnergy', () => {
         "7D9DC84AD110500D284B33C82FE6E85E": 1.5215
     }
   });
+});
+
+test('debice with duration = 23', () => {
+  expect(getRecomendation(inputHugeDuration).consumedEnergy.value).toBe(213.15);
 });
 
 test('error, when unable to fit because of too high power', () => {

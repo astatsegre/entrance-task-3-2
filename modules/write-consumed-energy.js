@@ -1,4 +1,4 @@
-let Big = require('./big.js/big');
+let Big = require('../big.js/big');
 
 let writeConsumedEnergy = function (whereToWrite, id, power, value) {
   if (whereToWrite[id]) {
