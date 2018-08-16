@@ -4,9 +4,9 @@ let inputData = {
       "id": "F972B82BA56A70CC579945773B6866FB",
       "name": "Посудомоечная машина",
       "power": 950,
-      "duration": 23,
+      "duration": 3,
     },
-    /*{
+    {
       "id": "C515D887EDBBE669B2FDAC62F571E9E9",
       "name": "Духовка",
       "power": 2000,
@@ -30,7 +30,7 @@ let inputData = {
       "name": "Кондиционер",
       "power": 850,
       "duration": 1
-    }*/
+    }
   ],
   "rates": [
     {
